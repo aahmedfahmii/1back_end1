@@ -57,3 +57,5 @@ const createReviewTable = `CREATE TABLE IF NOT EXISTS REVIEWS (
     STARS INT CHECK(STARS BETWEEN 1 AND 5),
     FOREIGN KEY (USER_ID) REFERENCES USERS (ID)
 )`;
+
+module.exports = {db,createUserTable,createFieldTable,createCoachesTable,createBookingTable,createPostTable,createReviewTable};
