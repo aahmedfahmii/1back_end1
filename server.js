@@ -83,3 +83,43 @@ server.get('/fields', (req, res) => {
     res.json(fields);
   });
 });
+
+server.post('/bookings/add', (req, res) => {
+  const userId = req.body.userId;
+  const fieldId = req.body.fieldId;
+  const bookingDate = req.body.bookingDate;
+
+  db.run(`INSERT INTO BOOKINGS (USER_ID, FIELD_ID, BOOKING_DATE) VALUES (?, ?, ?)`, [userId, fieldId, bookingDate], err => {
+    if (err) {
+      return res.status(500).send('Error creating booking.');
+    } else {
+      db.get(`SELECT NAME, LOCATION, PRICE, PICTURE FROM FIELDS WHERE ID = ?`, [fieldId], (err, field) => {
+        if (err) {
+          return res.status(500).send('Error fetching field details.');
+        }
+        if (!field) {
+          return res.status(404).send('Field not found.');
+        }
+        const fieldDetails = {
+          name: field.NAME,
+          location: field.LOCATION,
+          price: field.PRICE,
+          picture: field.PICTURE || "No picture available" 
+        };
+        res.status(200).send({
+          message: 'Booking added successfully',
+          fieldDetails: fieldDetails
+        });
+      });
+    }
+  });
+});
+
+server.listen(port, () => {
+  console.log(`Server started on port ${port}`);
+  db.serialize(() => {
+    db.run(db_access.createUserTable);
+    db.run(db_access.createFieldTable);
+    db.run(db_access.createBookingTable);
+  });
+});
