@@ -198,6 +198,43 @@ server.delete('/admin/coaches/:coachId', (req, res) => {
 });
 
 
+server.post('/reviews/add', (req, res) => {
+  const { userId, content } = req.body;
+
+  if (!content) {
+    return res.status(400).send('Review content cannot be empty');
+  }
+
+  const query = `INSERT INTO REVIEWS (USER_ID, CONTENT) VALUES (?, ?)`;
+
+  db.run(query, [userId, content], (err) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).send('Error adding review');
+    }
+    res.status(201).send('Review added successfully');
+      });
+});
+
+
+server.get('/reviews', (req, res) => {
+  const query = `SELECT CONTENT FROM REVIEWS`;
+
+  db.all(query, (err, reviews) => {
+      if (err)
+       {
+          console.error(err);
+          return res.status(500).send('Error fetching reviews');
+      }
+      if (!reviews.length) 
+      {
+          return res.status(404).send('No reviews found');
+      }
+      res.status(200).json(reviews);
+});
+});
+
+
 server.listen(port, () => {
   console.log(`Server started on port ${port}`);
   db.serialize(() => {
