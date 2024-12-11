@@ -57,3 +57,18 @@ server.post('/user/login', (req, res) => {
       });
     });
   });
+
+  server.post('/fields/add', (req, res) => {
+    const name = req.body.name;
+    const location = req.body.location;
+    const price = req.body.price;
+    const picture = req.body.picture || null;
+  
+    db.run(`INSERT INTO FIELDS (NAME, LOCATION, PRICE, PICTURE) VALUES (?, ?, ?, ?)`, 
+           [name, location, price, picture], err => {
+      if (err) {
+        return res.status(500).send('Error adding field.');
+      }
+      res.send('Field added successfully');
+    });
+  });
