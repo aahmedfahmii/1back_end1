@@ -115,6 +115,26 @@ server.post('/bookings/add', (req, res) => {
   });
 });
 
+server.get("/user/bookings/:userId", (req, res) => {
+  const userId = req.params.userId;
+  const query = `SELECT * FROM BOOKINGS WHERE USER_ID = ?`;
+
+  db.all(query, [userId], (err, bookings) => {
+    if (err) 
+    {
+      console.error(err);
+      return res.status(500).send("Error fetching booking history");
+    }
+    if (!bookings[0]) 
+    { 
+      return res.status(404).send("No bookings made by this user.");
+    }
+    res.status(200).json(bookings);
+  });
+});
+
+
+
 server.listen(port, () => {
   console.log(`Server started on port ${port}`);
   db.serialize(() => {
