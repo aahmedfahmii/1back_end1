@@ -30,3 +30,30 @@ server.post('/user/login', (req, res) => {
       });
     });
   });
+
+
+  server.post('/user/register', (req, res) => {
+    const name = req.body.name;
+    const email = req.body.email;
+    const password = req.body.password;
+    const age = req.body.age;
+    const height = req.body.height;
+    const speed = req.body.speed || 0; 
+    const dribbling = req.body.dribbling || 0; 
+    const passing = req.body.passing || 0; 
+    const shooting = req.body.shooting || 0; 
+    const picture = req.body.picture || null; 
+  
+    bcrypt.hash(password, 10, (err, hashedPassword) => {
+      if (err) {
+        return res.status(500).send('Error hashing password.');
+      }
+      db.run(`INSERT INTO USERS (NAME, EMAIL, PASSWORD, AGE, HEIGHT, SPEED, DRIBBLING, PASSING, SHOOTING, PICTURE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
+             [name, email, hashedPassword, age, height, speed, dribbling, passing, shooting, picture], err => {
+        if (err) {
+          return res.status(500).send('Error registering user.');
+        }
+        res.status(200).send('Registration successful');
+      });
+    });
+  });
