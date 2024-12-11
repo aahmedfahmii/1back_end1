@@ -58,6 +58,7 @@ server.post('/user/login', (req, res) => {
     });
   });
 
+
   server.post('/fields/add', (req, res) => {
     const name = req.body.name;
     const location = req.body.location;
@@ -72,3 +73,13 @@ server.post('/user/login', (req, res) => {
       res.send('Field added successfully');
     });
   });
+
+
+server.get('/fields', (req, res) => {
+  db.all(`SELECT * FROM FIELDS`, (err, fields) => {
+    if (err) {
+      return res.status(500).send('Error fetching fields.');
+    }
+    res.json(fields);
+  });
+});
