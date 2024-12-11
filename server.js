@@ -109,6 +109,22 @@ server.get('/fields', (req, res) => {
   });
 });
 
+server.put('/admin/fields/update/:fieldId', (req, res) => {
+  const { name, location, price } = req.body;
+  const fieldId = req.params.fieldId;
+
+  const query = `UPDATE FIELDS SET NAME = ?, LOCATION = ?, PRICE = ? WHERE ID = ?`;
+
+  db.run(query, [name, location, price, fieldId], (err) => {
+      if (err) 
+      {
+      console.error(err);
+          return res.status(500).send('Error updating field information');
+      }
+      res.status(200).send('Field information updated successfully');
+ });
+});
+
 server.post('/bookings/add', (req, res) => {
   const userId = req.body.userId;
   const fieldId = req.body.fieldId;
