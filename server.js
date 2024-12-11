@@ -115,7 +115,7 @@ server.post('/bookings/add', (req, res) => {
   });
 });
 
-server.get("/user/bookings/:userId", (req, res) => {
+server.get('/user/bookings/:USER_ID', (req, res) => {
   const userId = req.params.userId;
   const query = `SELECT * FROM BOOKINGS WHERE USER_ID = ?`;
 
