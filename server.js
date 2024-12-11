@@ -75,6 +75,31 @@ server.post('/user/login', (req, res) => {
   });
 
 
+  server.delete('/admin/fields/:fieldId', (req, res) => {
+    const fieldId = req.params.fieldId;
+  
+    db.get(`SELECT * FROM BOOKINGS WHERE FIELD_ID = ?`, [fieldId], (err, booking) => 
+    {
+      if (err) 
+      {
+        return res.status(500).send('Error checking field bookings');
+      }
+      if (booking) 
+      {
+        return res.status(400).send('Cannot delete the field because some bookings exists');
+      }
+  
+      db.run(`DELETE FROM FIELDS WHERE ID = ?`, [fieldId], (err) => {
+        if (err) 
+        {
+          return res.status(500).send('Error deleting field');
+        }
+        res.status(200).send('Field deleted successfully');
+   });
+  });
+  });
+  
+
 server.get('/fields', (req, res) => {
   db.all(`SELECT * FROM FIELDS`, (err, fields) => {
     if (err) {
@@ -133,6 +158,44 @@ server.get('/user/bookings/:USER_ID', (req, res) => {
   });
 });
 
+
+
+server.post('/admin/coaches', (req, res) => {
+  const { coachName, specialty, price, duration } = req.body;
+  const query = `INSERT INTO COACHES (COACH_NAME, SPECIALTY, PRICE, DURATION) VALUES (?, ?, ?, ?)`;
+
+  db.run(query, [coachName, specialty, price, duration], (err) => {
+      if (err) 
+      {
+          console.error(err);
+          return res.status(500).send('Error adding new coach');
+      }
+      res.status(201).send('New coach created successfully');
+});
+});
+
+
+server.delete('/admin/coaches/:coachId', (req, res) => {
+  const coachId = req.params.coachId;
+
+  db.get(`SELECT * FROM BOOKINGS WHERE COACH_ID = ?`, [coachId], (err, booking) => {
+    if (err) 
+    {
+      return res.status(500).send('Error checking coach bookings');
+    }
+    if (booking) 
+    {
+      return res.status(400).send('Cannot delete the coach because a booking exists');
+    }
+
+    db.run(`DELETE FROM COACHES WHERE ID = ?`, [coachId], (err) => {
+      if (err) {
+        return res.status(500).send('Error deleting coach');
+      }
+      res.status(200).send('Coach deleted successfully');
+});
+});
+});
 
 
 server.listen(port, () => {
