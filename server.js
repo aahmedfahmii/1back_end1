@@ -1,12 +1,38 @@
-const express = require ('express');
+const express = require ('express')
 const cors = require ('cors');
-const bcrypt = require ('bcrypt');
+const bcrypt = require ('bcrypt')
 const db_access = require ('./db.js')
 const db = db_access.db
 const server =express()
 const port = 101
 server.use(cors())
 server.use(express.json())
+const jwt = require('jsonwebtoken')
+const cookieParser = require('cookie-parser');  
+
+const secret_key = 'qwertyuiop1asdfghjkl2zxcvbnm';
+server.use(cors({
+  origin: "http://localhost:2005",
+  credentials: true
+}))
+server.use(express.json());
+server.use(cookieParser()); 
+const generateToken = (id, isAdmin) => {
+  return jwt.sign({ id, isAdmin }, secret_key, { expiresIn: '1h' });
+}
+const verifyToken = (req, res, next) => {
+  const token = req.cookies.authToken;
+  if (!token) {
+      return res.status(401).send('Unauthorized');
+  }
+  jwt.verify(token, secret_key, (err, userDetails) => {
+      if (err) {
+          return res.status(403).send('Invalid or expired token');
+      }
+      req.userDetails = userDetails;
+      next();
+  });
+};
 
 server.post('/user/login', (req, res) => {
     const email = req.body.email;
@@ -34,15 +60,15 @@ server.post('/user/login', (req, res) => {
 
   server.post('/user/register', (req, res) => {
     const name = req.body.name;
-    const email = req.body.email;
-    const password = req.body.password;
+    const email = req.body.email
+    const password = req.body.password
     const age = req.body.age;
     const height = req.body.height;
-    const speed = req.body.speed || 0; 
-    const dribbling = req.body.dribbling || 0; 
+    const speed = req.body.speed || 0
+    const dribbling = req.body.dribbling || 0
     const passing = req.body.passing || 0; 
-    const shooting = req.body.shooting || 0; 
-    const picture = req.body.picture || null; 
+    const shooting = req.body.shooting || 0
+    const picture = req.body.picture || null
   
     bcrypt.hash(password, 10, (err, hashedPassword) => {
       if (err) {
@@ -61,16 +87,16 @@ server.post('/user/login', (req, res) => {
 
   server.post('/fields/add', (req, res) => {
     const name = req.body.name;
-    const location = req.body.location;
-    const price = req.body.price;
-    const picture = req.body.picture || null;
+    const location = req.body.location
+    const price = req.body.price
+    const picture = req.body.picture || null
   
     db.run(`INSERT INTO FIELDS (NAME, LOCATION, PRICE, PICTURE) VALUES (?, ?, ?, ?)`, 
            [name, location, price, picture], err => {
       if (err) {
-        return res.status(500).send('Error adding field.');
+        return res.status(500).send('Error adding field.')
       }
-      res.send('Field added successfully');
+      res.send('Field added successfully')
     });
   });
 
@@ -82,7 +108,7 @@ server.post('/user/login', (req, res) => {
     {
       if (err) 
       {
-        return res.status(500).send('Error checking field bookings');
+        return res.status(500).send('Error checking field bookings')
       }
       if (booking) 
       {
@@ -94,7 +120,7 @@ server.post('/user/login', (req, res) => {
         {
           return res.status(500).send('Error deleting field');
         }
-        res.status(200).send('Field deleted successfully');
+        res.status(200).send('Field deleted successfully')
    });
   });
   });
@@ -110,8 +136,10 @@ server.get('/fields', (req, res) => {
 });
 
 server.put('/admin/fields/update/:fieldId', (req, res) => {
-  const { name, location, price } = req.body;
-  const fieldId = req.params.fieldId;
+  const name = req.body.name
+const location = req.body.location
+const price = req.body.price
+const fieldId = req.params.fieldId
 
   const query = `UPDATE FIELDS SET NAME = ?, LOCATION = ?, PRICE = ? WHERE ID = ?`;
 
@@ -119,11 +147,11 @@ server.put('/admin/fields/update/:fieldId', (req, res) => {
       if (err) 
       {
       console.error(err);
-          return res.status(500).send('Error updating field information');
+          return res.status(500).send('Error updating field information')
       }
-      res.status(200).send('Field information updated successfully');
- });
-});
+      res.status(200).send('Field information updated successfully')
+ })
+})
 
 server.post('/bookings/add', (req, res) => {
   const userId = req.body.userId;
@@ -132,14 +160,14 @@ server.post('/bookings/add', (req, res) => {
 
   db.run(`INSERT INTO BOOKINGS (USER_ID, FIELD_ID, BOOKING_DATE) VALUES (?, ?, ?)`, [userId, fieldId, bookingDate], err => {
     if (err) {
-      return res.status(500).send('Error creating booking.');
+      return res.status(500).send('Error creating booking.')
     } else {
       db.get(`SELECT NAME, LOCATION, PRICE, PICTURE FROM FIELDS WHERE ID = ?`, [fieldId], (err, field) => {
         if (err) {
-          return res.status(500).send('Error fetching field details.');
+          return res.status(500).send('Error fetching field details.')
         }
         if (!field) {
-          return res.status(404).send('Field not found.');
+          return res.status(404).send('Field not found.')
         }
         const fieldDetails = {
           name: field.NAME,
@@ -158,17 +186,17 @@ server.post('/bookings/add', (req, res) => {
 
 server.get('/user/bookings/:USER_ID', (req, res) => {
   const userId = req.params.userId;
-  const query = `SELECT * FROM BOOKINGS WHERE USER_ID = ?`;
+  const query = `SELECT * FROM BOOKINGS WHERE USER_ID = ?`
 
   db.all(query, [userId], (err, bookings) => {
     if (err) 
     {
       console.error(err);
-      return res.status(500).send("Error fetching booking history");
+      return res.status(500).send("Error fetching booking history")
     }
     if (!bookings[0]) 
     { 
-      return res.status(404).send("No bookings made by this user.");
+      return res.status(404).send("No bookings made by this user.")
     }
     res.status(200).json(bookings);
   });
@@ -177,7 +205,10 @@ server.get('/user/bookings/:USER_ID', (req, res) => {
 
 
 server.post('/admin/coaches', (req, res) => {
-  const { coachName, specialty, price, duration } = req.body;
+  const coachName = req.body.coachName
+    const specialty = req.body.specialty
+  const price = req.body.price
+    const duration = req.body.duration
   const query = `INSERT INTO COACHES (COACH_NAME, SPECIALTY, PRICE, DURATION) VALUES (?, ?, ?, ?)`;
 
   db.run(query, [coachName, specialty, price, duration], (err) => {
@@ -197,7 +228,7 @@ server.delete('/admin/coaches/:coachId', (req, res) => {
   db.get(`SELECT * FROM BOOKINGS WHERE COACH_ID = ?`, [coachId], (err, booking) => {
     if (err) 
     {
-      return res.status(500).send('Error checking coach bookings');
+      return res.status(500).send('Error checking coach bookings')
     }
     if (booking) 
     {
@@ -206,16 +237,17 @@ server.delete('/admin/coaches/:coachId', (req, res) => {
 
     db.run(`DELETE FROM COACHES WHERE ID = ?`, [coachId], (err) => {
       if (err) {
-        return res.status(500).send('Error deleting coach');
+        return res.status(500).send('Error deleting coach')
       }
-      res.status(200).send('Coach deleted successfully');
-});
-});
-});
+      res.status(200).send('Coach deleted successfully')
+})
+})
+})
 
 
 server.post('/reviews/add', (req, res) => {
-  const { userId, content } = req.body;
+  const userId = req.body.userId
+    const content = req.body.content
 
   if (!content) {
     return res.status(400).send('Review content cannot be empty');
@@ -226,11 +258,11 @@ server.post('/reviews/add', (req, res) => {
   db.run(query, [userId, content], (err) => {
     if (err) {
       console.error(err);
-      return res.status(500).send('Error adding review');
+      return res.status(500).send('Error adding review')
     }
-    res.status(201).send('Review added successfully');
-      });
-});
+    res.status(201).send('Review added successfully')
+      })
+})
 
 
 server.get('/reviews', (req, res) => {
@@ -240,15 +272,15 @@ server.get('/reviews', (req, res) => {
       if (err)
        {
           console.error(err);
-          return res.status(500).send('Error fetching reviews');
+          return res.status(500).send('Error fetching reviews')
       }
       if (!reviews.length) 
       {
-          return res.status(404).send('No reviews found');
+          return res.status(404).send('No reviews found')
       }
-      res.status(200).json(reviews);
-});
-});
+      res.status(200).json(reviews)
+})
+})
 
 
 server.listen(port, () => {
