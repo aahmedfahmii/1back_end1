@@ -70,14 +70,14 @@ server.post('/user/login', (req, res) => {
 
 
   server.post('/user/register', (req, res) => {
-    const name = req.body.name;
+    const name = req.body.name
     const email = req.body.email
     const password = req.body.password
-    const age = req.body.age;
+    const age = req.body.age
     const height = req.body.height;
     const speed = req.body.speed || 0
     const dribbling = req.body.dribbling || 0
-    const passing = req.body.passing || 0; 
+    const passing = req.body.passing || 0
     const shooting = req.body.shooting || 0
     const picture = req.body.picture || null
   
@@ -88,12 +88,12 @@ server.post('/user/login', (req, res) => {
       db.run(`INSERT INTO USERS (NAME, EMAIL, PASSWORD, AGE, HEIGHT, SPEED, DRIBBLING, PASSING, SHOOTING, PICTURE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
              [name, email, hashedPassword, age, height, speed, dribbling, passing, shooting, picture], err => {
         if (err) {
-          return res.status(500).send('Error registering user.');
+          return res.status(500).send('Error registering user.')
         }
-        res.status(200).send('Registration successful');
-      });
-    });
-  });
+        res.status(200).send('Registration successful')
+      })
+    })
+  })
 
 server.get('/user/profile', verifyToken, (req, res) => {
     const userId = req.userDetails.id
@@ -106,9 +106,9 @@ server.get('/user/profile', verifyToken, (req, res) => {
       if (!user) {
         return res.status(404).send('User not found.')
       }
-      res.status(200).json(user);
-    });
-  });
+      res.status(200).json(user)
+    })
+  })
   
 
   server.put('/user/profile/update', verifyToken, (req, res) => {
