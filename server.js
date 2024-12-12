@@ -34,6 +34,8 @@ const verifyToken = (req, res, next) => {
   });
 };
 
+// LOGIN
+
 server.post('/user/login', (req, res) => {
     const email = req.body.email;
     const password = req.body.password;
@@ -68,6 +70,7 @@ server.post('/user/login', (req, res) => {
 });
 });
 
+// REGISTER
 
   server.post('/user/register', (req, res) => {
     const name = req.body.name
@@ -95,6 +98,8 @@ server.post('/user/login', (req, res) => {
     })
   })
 
+// PROFILE DETAILS
+
 server.get('/user/profile', verifyToken, (req, res) => {
     const userId = req.userDetails.id
   
@@ -110,6 +115,7 @@ server.get('/user/profile', verifyToken, (req, res) => {
     })
   })
   
+// UPDATED PROFILE DETAILS
 
   server.put('/user/profile/update', verifyToken, (req, res) => {
     const userId = req.userDetails.id
@@ -145,6 +151,7 @@ server.get('/user/profile', verifyToken, (req, res) => {
   })
   })
   
+// ADD NEW FIELD 
 
   server.post('/fields/add', verifyToken, (req, res) => {
     const isAdmin = req.userDetails.isAdmin;
@@ -165,6 +172,7 @@ server.get('/user/profile', verifyToken, (req, res) => {
   })
   })
 
+// DELETE EXISITING FIELD
 
   server.delete('/fields/:fieldId', verifyToken, (req, res) => {
     const isAdmin = req.userDetails.isAdmin;
@@ -194,6 +202,7 @@ server.get('/user/profile', verifyToken, (req, res) => {
   })
   })
   
+// FETCH ALL EXISTING FIELDS
 
 server.get('/fields', verifyToken, (req, res) => {
   db.all(`SELECT * FROM FIELDS`, (err, fields) => {
@@ -203,6 +212,8 @@ server.get('/fields', verifyToken, (req, res) => {
     res.json(fields);
   })
 })
+
+// UPDATE EXISITTNG FIELD]
 
 server.put('/fields/update/:fieldId', verifyToken, (req, res) => {
 const isAdmin = req.userDetails.isAdmin
@@ -225,6 +236,8 @@ const fieldId = req.params.fieldId
       res.status(200).send('Field information updated successfully')
  })
 })
+
+// MAKE A BOOKING  
 
 server.post('/bookings/add', (req, res) => {
   const userId = req.userDetails.id
@@ -258,6 +271,8 @@ server.post('/bookings/add', (req, res) => {
   })
 })
 
+// HISTORY OF BOOKING FOR SPEICIFC USER
+
 server.get('/user/bookings', verifyToken, (req, res) => {
 const userId = req.userDetails.id;
   const query = `SELECT * FROM BOOKINGS WHERE USER_ID = ?`
@@ -276,7 +291,7 @@ const userId = req.userDetails.id;
   })
 })
 
-
+// ADDING NEW COACH
 
 server.post('/coaches', verifyToken, (req, res) => {
   const isAdmin = req.userDetails.isAdmin
@@ -299,6 +314,7 @@ server.post('/coaches', verifyToken, (req, res) => {
 })
 })
 
+// DELETE EXISTING COACH
 
 server.delete('/coaches/:coachId', verifyToken, (req, res) => {
 const isAdmin = req.userDetails.isAdmin
@@ -326,6 +342,7 @@ if (isAdmin !== 1) {
 })
 })
 
+// ADD A REVIEW 
 
 server.post('/reviews/add', verifyToken, (req, res) => {
   const userId = req.userDetails.id;
@@ -346,6 +363,7 @@ server.post('/reviews/add', verifyToken, (req, res) => {
       })
 })
 
+// SEE ALL USER REVIEWS
 
 server.get('/reviews', verifyToken, (req, res) => {
   const query = `SELECT CONTENT FROM REVIEWS`;
