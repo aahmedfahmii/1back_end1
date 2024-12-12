@@ -51,11 +51,22 @@ server.post('/user/login', (req, res) => {
         if (!isMatch) {
           return res.status(401).send('Invalid credentials');
         }
-        res.cookie('username', user.NAME, { httpOnly: true, maxAge: 3600000 });
-        return res.status(200).send('Login successful');
-      });
-    });
+        else {
+          let userID = user.ID;
+          let isAdmin = user.ISADMIN;
+          const token = generateToken(userID, isAdmin);
+
+          res.cookie('authToken', token, {
+              httpOnly: true,
+              sameSite: 'none',
+              secure: true,
+              maxAge: 3600000 
+          });
+          return res.status(200).json({ id: userID, admin: isAdmin });
+      }
   });
+});
+});
 
 
   server.post('/user/register', (req, res) => {
@@ -85,24 +96,32 @@ server.post('/user/login', (req, res) => {
   });
 
 
-  server.post('/fields/add', (req, res) => {
-    const name = req.body.name;
-    const location = req.body.location
-    const price = req.body.price
-    const picture = req.body.picture || null
+  server.post('/fields/add', verifyToken, (req, res) => {
+    const isAdmin = req.userDetails.isAdmin;
+  if (isAdmin !== 1) {
+    return res.status(403).send("you are not an admin")
+  }
+       const name = req.body.name
+      const location = req.body.location
+     const price = req.body.price
+      const picture = req.body.picture || null
   
     db.run(`INSERT INTO FIELDS (NAME, LOCATION, PRICE, PICTURE) VALUES (?, ?, ?, ?)`, 
            [name, location, price, picture], err => {
       if (err) {
         return res.status(500).send('Error adding field.')
       }
-      res.send('Field added successfully')
-    });
-  });
+      res.send('Field added successfully');
+  })
+  })
 
 
-  server.delete('/admin/fields/:fieldId', (req, res) => {
-    const fieldId = req.params.fieldId;
+  server.delete('/fields/:fieldId', verifyToken, (req, res) => {
+    const isAdmin = req.userDetails.isAdmin;
+  if (isAdmin !== 1) {
+    return res.status(403).send("you are not an admin");
+  }
+    const fieldId = req.params.fieldId
   
     db.get(`SELECT * FROM BOOKINGS WHERE FIELD_ID = ?`, [fieldId], (err, booking) => 
     {
@@ -135,7 +154,11 @@ server.get('/fields', (req, res) => {
   });
 });
 
-server.put('/admin/fields/update/:fieldId', (req, res) => {
+server.put('/fields/update/:fieldId', verifyToken, (req, res) => {
+const isAdmin = req.userDetails.isAdmin
+  if (isAdmin !== 1) {
+    return res.status(403).send("you are not an admin")
+  }
   const name = req.body.name
 const location = req.body.location
 const price = req.body.price
@@ -154,9 +177,9 @@ const fieldId = req.params.fieldId
 })
 
 server.post('/bookings/add', (req, res) => {
-  const userId = req.body.userId;
-  const fieldId = req.body.fieldId;
-  const bookingDate = req.body.bookingDate;
+  const userId = req.userDetails.id
+  const fieldId = req.body.fieldId
+  const bookingDate = req.body.bookingDate
 
   db.run(`INSERT INTO BOOKINGS (USER_ID, FIELD_ID, BOOKING_DATE) VALUES (?, ?, ?)`, [userId, fieldId, bookingDate], err => {
     if (err) {
@@ -184,8 +207,8 @@ server.post('/bookings/add', (req, res) => {
   });
 });
 
-server.get('/user/bookings/:USER_ID', (req, res) => {
-  const userId = req.params.userId;
+server.get('/user/bookings', verifyToken, (req, res) => {
+const userId = req.userDetails.id;
   const query = `SELECT * FROM BOOKINGS WHERE USER_ID = ?`
 
   db.all(query, [userId], (err, bookings) => {
@@ -204,7 +227,11 @@ server.get('/user/bookings/:USER_ID', (req, res) => {
 
 
 
-server.post('/admin/coaches', (req, res) => {
+server.post('/coaches', verifyToken, (req, res) => {
+  const isAdmin = req.userDetails.isAdmin
+  if (isAdmin !== 1) {
+    return res.status(403).send("you are not an admin")
+  }
   const coachName = req.body.coachName
     const specialty = req.body.specialty
   const price = req.body.price
@@ -222,7 +249,11 @@ server.post('/admin/coaches', (req, res) => {
 });
 
 
-server.delete('/admin/coaches/:coachId', (req, res) => {
+server.delete('/coaches/:coachId', verifyToken, (req, res) => {
+const isAdmin = req.userDetails.isAdmin
+if (isAdmin !== 1) {
+  return res.status(403).send("you are not an admin")
+  }
   const coachId = req.params.coachId;
 
   db.get(`SELECT * FROM BOOKINGS WHERE COACH_ID = ?`, [coachId], (err, booking) => {
@@ -245,15 +276,15 @@ server.delete('/admin/coaches/:coachId', (req, res) => {
 })
 
 
-server.post('/reviews/add', (req, res) => {
-  const userId = req.body.userId
+server.post('/reviews/add', verifyToken, (req, res) => {
+  const userId = req.userDetails.id;
     const content = req.body.content
 
   if (!content) {
-    return res.status(400).send('Review content cannot be empty');
+    return res.status(400).send('Review content cannot be empty')
   }
 
-  const query = `INSERT INTO REVIEWS (USER_ID, CONTENT) VALUES (?, ?)`;
+  const query = `INSERT INTO REVIEWS (USER_ID, CONTENT) VALUES (?, ?)`
 
   db.run(query, [userId, content], (err) => {
     if (err) {
@@ -265,7 +296,7 @@ server.post('/reviews/add', (req, res) => {
 })
 
 
-server.get('/reviews', (req, res) => {
+server.get('/reviews', verifyToken, (req, res) => {
   const query = `SELECT CONTENT FROM REVIEWS`;
 
   db.all(query, (err, reviews) => {
@@ -274,7 +305,7 @@ server.get('/reviews', (req, res) => {
           console.error(err);
           return res.status(500).send('Error fetching reviews')
       }
-      if (!reviews.length) 
+      if (reviews.length === 0) 
       {
           return res.status(404).send('No reviews found')
       }
