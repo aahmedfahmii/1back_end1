@@ -145,7 +145,7 @@ server.post('/user/login', (req, res) => {
   });
   
 
-server.get('/fields', (req, res) => {
+server.get('/fields', verifyToken, (req, res) => {
   db.all(`SELECT * FROM FIELDS`, (err, fields) => {
     if (err) {
       return res.status(500).send('Error fetching fields.');
