@@ -239,37 +239,57 @@ const fieldId = req.params.fieldId
 
 // MAKE A BOOKING  
 
-server.post('/bookings/add', (req, res) => {
+server.post('/bookings/add', verifyToken, (req, res) => {
   const userId = req.userDetails.id
-  const fieldId = req.body.fieldId
-  const bookingDate = req.body.bookingDate
+  const fieldId  = fieldId.req.body
+  const bookingDate = bookingDate.req.body
+  const coachId = coachId.req.body
+  
+  db.get(`SELECT NAME, LOCATION, PRICE, PICTURE FROM FIELDS WHERE ID = ?`, [fieldId], (err, field) => {
+    if (err) {
+      return res.status(500).send('Error fetching field details.')
+    }
+    if (!field) {
+      return res.status(404).send('Field not found.')
+    }
 
-  db.run(`INSERT INTO BOOKINGS (USER_ID, FIELD_ID, BOOKING_DATE) VALUES (?, ?, ?)`, [userId, fieldId, bookingDate], err => {
+    let totalPrice = field.PRICE
+
+    if (coachId) {
+      db.get(`SELECT PRICE FROM COACHES WHERE ID = ?`, [coachId], (err, coach) => {
+        if (err) {
+          return res.status(500).send('Error fetching coach price.')
+        }
+        if (coach) {
+          totalPrice += coach.PRICE; 
+        }
+
+        insertBooking(userId, fieldId, bookingDate, coachId, totalPrice, res)
+      });
+    } else {
+      insertBooking(userId, fieldId, bookingDate, null, totalPrice, res);
+    }
+  });
+});
+
+function insertBooking(userId, fieldId, bookingDate, coachId, totalPrice, res) {
+  db.run(`INSERT INTO BOOKINGS (USER_ID, FIELD_ID, BOOKING_DATE, COACH_ID, PRICE) VALUES (?, ?, ?, ?, ?)`, 
+    [userId, fieldId, bookingDate, coachId, totalPrice], function(err) {
     if (err) {
       return res.status(500).send('Error creating booking.')
-    } 
-    else {
-      db.get(`SELECT NAME, LOCATION, PRICE, PICTURE FROM FIELDS WHERE ID = ?`, [fieldId], (err, field) => {
-        if (err) {
-          return res.status(500).send('Error fetching field details.')
-        }
-        if (!field) {
-          return res.status(404).send('Field not found.')
-        }
-        const fieldDetails = {
-          name: field.NAME,
-          location: field.LOCATION,
-          price: field.PRICE,
-          picture: field.PICTURE || "No picture available" 
-        };
-        res.status(200).send({
-          message: 'Booking added successfully',
-          fieldDetails: fieldDetails
-        })
-      })
     }
-  })
+    res.status(200).send({
+      message: 'Booking added successfully',
+      bookingDetails: {
+        fieldId: fieldId,
+        bookingDate: bookingDate,
+        coachId: coachId,
+        totalPrice: totalPrice
+  }
 })
+})
+}
+
 
 // HISTORY OF BOOKING FOR SPEICIFC USER
 
