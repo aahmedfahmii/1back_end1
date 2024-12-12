@@ -95,6 +95,56 @@ server.post('/user/login', (req, res) => {
     });
   });
 
+server.get('/user/profile', verifyToken, (req, res) => {
+    const userId = req.userDetails.id
+  
+    db.get(`SELECT NAME, EMAIL, AGE, HEIGHT, SPEED, DRIBBLING, PASSING, SHOOTING, PICTURE 
+            FROM USERS WHERE ID = ?`, [userId], (err, user) => {
+      if (err) {
+        return res.status(500).send('Error fetching user profile.')
+      }
+      if (!user) {
+        return res.status(404).send('User not found.')
+      }
+      res.status(200).json(user);
+    });
+  });
+  
+
+  server.put('/user/profile/update', verifyToken, (req, res) => {
+    const userId = req.userDetails.id
+    const name = req.body.name
+    const email = req.body.email
+    const age = req.body.age
+    const height = req.body.height
+    const speed = req.body.speed || 0
+    const dribbling = req.body.dribbling || 0
+    const passing = req.body.passing || 0
+    const shooting = req.body.shooting || 0
+    const picture = req.body.picture || null
+  
+    const query = `UPDATE USERS SET NAME = ?, EMAIL = ?, AGE = ?,
+     HEIGHT = ?, SPEED = ?, DRIBBLING = ?, PASSING = ?, SHOOTING = ?,
+      PICTURE = ? WHERE ID = ?`
+  
+    db.run(query, [name, email, age, height, speed, dribbling, passing, shooting, picture, userId], (err) => {
+      if (err) {
+      console.error(err)
+      return res.status(500).send('Error updating profile.')
+      }
+      db.get(`SELECT NAME, EMAIL, AGE, HEIGHT FROM USERS WHERE ID = ?`, [userId], (err, user) => {
+       if (err) {
+        console.error(err)
+        return res.status(500).send('Error validating updated profile.')
+      }
+        if (!user || !user.NAME || !user.EMAIL || !user.AGE || !user.HEIGHT) {
+          return res.status(400).send('Updated profile contains empty required fields.')
+        }
+        return res.status(200).send('Profile updated successfully.')
+    })
+  })
+  })
+  
 
   server.post('/fields/add', verifyToken, (req, res) => {
     const isAdmin = req.userDetails.isAdmin;
@@ -140,19 +190,19 @@ server.post('/user/login', (req, res) => {
           return res.status(500).send('Error deleting field');
         }
         res.status(200).send('Field deleted successfully')
-   });
-  });
-  });
+   })
+  })
+  })
   
 
 server.get('/fields', verifyToken, (req, res) => {
   db.all(`SELECT * FROM FIELDS`, (err, fields) => {
     if (err) {
-      return res.status(500).send('Error fetching fields.');
+      return res.status(500).send('Error fetching fields.')
     }
     res.json(fields);
-  });
-});
+  })
+})
 
 server.put('/fields/update/:fieldId', verifyToken, (req, res) => {
 const isAdmin = req.userDetails.isAdmin
@@ -184,7 +234,8 @@ server.post('/bookings/add', (req, res) => {
   db.run(`INSERT INTO BOOKINGS (USER_ID, FIELD_ID, BOOKING_DATE) VALUES (?, ?, ?)`, [userId, fieldId, bookingDate], err => {
     if (err) {
       return res.status(500).send('Error creating booking.')
-    } else {
+    } 
+    else {
       db.get(`SELECT NAME, LOCATION, PRICE, PICTURE FROM FIELDS WHERE ID = ?`, [fieldId], (err, field) => {
         if (err) {
           return res.status(500).send('Error fetching field details.')
@@ -201,11 +252,11 @@ server.post('/bookings/add', (req, res) => {
         res.status(200).send({
           message: 'Booking added successfully',
           fieldDetails: fieldDetails
-        });
-      });
+        })
+      })
     }
-  });
-});
+  })
+})
 
 server.get('/user/bookings', verifyToken, (req, res) => {
 const userId = req.userDetails.id;
@@ -222,8 +273,8 @@ const userId = req.userDetails.id;
       return res.status(404).send("No bookings made by this user.")
     }
     res.status(200).json(bookings);
-  });
-});
+  })
+})
 
 
 
@@ -245,8 +296,8 @@ server.post('/coaches', verifyToken, (req, res) => {
           return res.status(500).send('Error adding new coach');
       }
       res.status(201).send('New coach created successfully');
-});
-});
+})
+})
 
 
 server.delete('/coaches/:coachId', verifyToken, (req, res) => {
