@@ -240,55 +240,78 @@ const fieldId = req.params.fieldId
 // MAKE A BOOKING  
 
 server.post('/bookings/add', verifyToken, (req, res) => {
-  const userId = req.userDetails.id
-  const fieldId  = fieldId.req.body
-  const bookingDate = bookingDate.req.body
-  const coachId = coachId.req.body
-  
-  db.get(`SELECT NAME, LOCATION, PRICE, PICTURE FROM FIELDS WHERE ID = ?`, [fieldId], (err, field) => {
+const userId = req.userDetails.id
+const fieldId = req.body.fieldId
+  const timingId = req.body.timingId
+  const bookingDate = req.body.bookingDate
+  const coachId = req.body.coachId
+
+  db.get(`SELECT ID FROM TIMINGS WHERE ID = ?`, [timingId], (err, timing) => {
     if (err) {
-      return res.status(500).send('Error fetching field details.')
+      return res.status(500).send('Error checking timing availability.')
     }
-    if (!field) {
-      return res.status(404).send('Field not found.')
+    if (!timing) {
+      return res.status(404).send('Timing slot not found or unavailable.')
     }
 
-    let totalPrice = field.PRICE
+    db.get(`SELECT NAME, LOCATION, PRICE, PICTURE FROM FIELDS WHERE ID = ?`, [fieldId], (err, field) => {
+      if (err) {
+        return res.status(500).send('Error fetching field details.')
+      }
+      if (!field) {
+        return res.status(404).send('Field not found.')
+      }
 
-    if (coachId) {
-      db.get(`SELECT PRICE FROM COACHES WHERE ID = ?`, [coachId], (err, coach) => {
-        if (err) {
-          return res.status(500).send('Error fetching coach price.')
-        }
-        if (coach) {
-          totalPrice += coach.PRICE; 
-        }
+      let totalPrice = field.PRICE;
 
-        insertBooking(userId, fieldId, bookingDate, coachId, totalPrice, res)
-      });
-    } else {
-      insertBooking(userId, fieldId, bookingDate, null, totalPrice, res);
-    }
-  });
+      if (coachId) {
+        db.get(`SELECT PRICE FROM COACHES WHERE ID = ?`, [coachId], (err, coach) => {
+          if (err) {
+            return res.status(500).send('Error fetching coach price.')
+          }
+          if (coach) {
+            totalPrice += coach.PRICE
+          }
+
+          insertBooking(userId, fieldId, bookingDate, timingId, coachId, totalPrice, res)
+        });
+      } else {
+        insertBooking(userId, fieldId, bookingDate, timingId, null, totalPrice, res)
+      }
+    })
+  })
 });
 
-function insertBooking(userId, fieldId, bookingDate, coachId, totalPrice, res) {
-  db.run(`INSERT INTO BOOKINGS (USER_ID, FIELD_ID, BOOKING_DATE, COACH_ID, PRICE) VALUES (?, ?, ?, ?, ?)`, 
-    [userId, fieldId, bookingDate, coachId, totalPrice], function(err) {
-    if (err) {
-      return res.status(500).send('Error creating booking.')
-    }
-    res.status(200).send({
-      message: 'Booking added successfully',
-      bookingDetails: {
-        fieldId: fieldId,
-        bookingDate: bookingDate,
-        coachId: coachId,
-        totalPrice: totalPrice
-  }
-})
-})
+function insertBooking(userId, fieldId, bookingDate, timingId, coachId, totalPrice, res) {
+  db.run(`INSERT INTO BOOKINGS (USER_ID, FIELD_ID, BOOKING_DATE, TIMING_ID, COACH_ID, PRICE) VALUES (?, ?, ?, ?, ?, ?)`, 
+    [userId, fieldId, bookingDate, timingId, coachId, totalPrice], function(err) {
+      if (err) {
+        return res.status(500).send('Error creating booking.')
+      }
+      res.status(200).send({
+        message: 'Booking added successfully',
+        bookingDetails: {
+          fieldId: fieldId,
+          bookingDate: bookingDate,
+          timingId: timingId,
+          coachId: coachId,
+          totalPrice: totalPrice
+        }
+      });
+  });
 }
+
+
+//FETCHING ALL TIMMINGS TO DISPLAY WHILE BOOKING
+
+server.get('/timings', verifyToken, (req, res) => {
+  db.all(`SELECT * FROM TIMINGS`, (err, timings) => {
+      if (err) {
+          return res.status(500).send('Error fetching timings.')
+      }
+      res.status(200).json(timings);
+  })
+});
 
 
 // HISTORY OF BOOKING FOR SPEICIFC USER
