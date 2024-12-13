@@ -4,17 +4,17 @@ const bcrypt = require ('bcrypt')
 const db_access = require ('./db.js')
 const db = db_access.db
 const server =express()
-const port = 101
-server.use(cors())
+const port = 5001
 server.use(express.json())
 const jwt = require('jsonwebtoken')
 const cookieParser = require('cookie-parser');  
 
 const secret_key = 'qwertyuiop1asdfghjkl2zxcvbnm';
-server.use(cors({
-  origin: "http://localhost:2005",
-  credentials: true
-}))
+  server.use(cors({
+   origin: "http://localhost:3000",
+   credentials: true
+ }))
+
 server.use(express.json());
 server.use(cookieParser()); 
 const generateToken = (id, isAdmin) => {
@@ -86,13 +86,12 @@ server.post('/user/login', (req, res) => {
     const isAdmin = req.body.isAdmin || 0;
 
     const adminStatus = isAdmin ? 1 : 0
-    
-    if (password.length < 8) {
-      return res.status(400).send('Password must be at least 8 characters long.');
-    }
+     if (password.length < 8) {
+       return res.status(400).send('Password must be at least 8 characters long.');
+     }
     bcrypt.hash(password, 10, (err, hashedPassword) => {
       if (err) {
-        return res.status(500).send('Error hashing password.');
+        return res.status(500).send(`Error hashing password. ${err}`);
       }
       db.run(`INSERT INTO USERS (NAME, EMAIL, PASSWORD, AGE, HEIGHT, SPEED, DRIBBLING, PASSING, SHOOTING, PICTURE, ISADMIN) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
              [name, email, hashedPassword, age, height, speed, dribbling, passing, shooting, picture, adminStatus], err => {
