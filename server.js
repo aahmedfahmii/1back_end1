@@ -84,6 +84,9 @@ server.post('/user/login', (req, res) => {
     const shooting = req.body.shooting || 0
     const picture = req.body.picture || null
 
+    if (password.length < 8) {
+      return res.status(400).send('Password must be at least 8 characters long.');
+    }
     bcrypt.hash(password, 10, (err, hashedPassword) => {
       if (err) {
         return res.status(500).send('Error hashing password.');
