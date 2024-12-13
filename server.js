@@ -83,12 +83,12 @@ server.post('/user/login', (req, res) => {
     const passing = req.body.passing || 0
     const shooting = req.body.shooting || 0
     const picture = req.body.picture || null
-  
+
     bcrypt.hash(password, 10, (err, hashedPassword) => {
       if (err) {
         return res.status(500).send('Error hashing password.');
       }
-      db.run(`INSERT INTO USERS (NAME, EMAIL, PASSWORD, AGE, HEIGHT, SPEED, DRIBBLING, PASSING, SHOOTING, PICTURE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
+      db.run(`INSERT INTO USERS (NAME, EMAIL, PASSWORD, AGE, HEIGHT, SPEED, DRIBBLING, PASSING, SHOOTING, PICTURE, ISADMIN) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`, 
              [name, email, hashedPassword, age, height, speed, dribbling, passing, shooting, picture], err => {
         if (err) {
           return res.status(500).send('Error registering user.')
@@ -455,5 +455,9 @@ server.listen(port, () => {
     db.run(db_access.createUserTable);
     db.run(db_access.createFieldTable);
     db.run(db_access.createBookingTable);
+    db.run(createTimingsTable)
+    db.run(createCoachesTable)
+    db.run(createPostTable)
+        db.run(createReviewTable)
   });
 });
