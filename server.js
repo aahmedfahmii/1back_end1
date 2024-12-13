@@ -83,7 +83,10 @@ server.post('/user/login', (req, res) => {
     const passing = req.body.passing || 0
     const shooting = req.body.shooting || 0
     const picture = req.body.picture || null
+    const isAdmin = req.body.isAdmin || 0;
 
+    const adminStatus = isAdmin ? 1 : 0
+    
     if (password.length < 8) {
       return res.status(400).send('Password must be at least 8 characters long.');
     }
@@ -91,8 +94,8 @@ server.post('/user/login', (req, res) => {
       if (err) {
         return res.status(500).send('Error hashing password.');
       }
-      db.run(`INSERT INTO USERS (NAME, EMAIL, PASSWORD, AGE, HEIGHT, SPEED, DRIBBLING, PASSING, SHOOTING, PICTURE, ISADMIN) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`, 
-             [name, email, hashedPassword, age, height, speed, dribbling, passing, shooting, picture], err => {
+      db.run(`INSERT INTO USERS (NAME, EMAIL, PASSWORD, AGE, HEIGHT, SPEED, DRIBBLING, PASSING, SHOOTING, PICTURE, ISADMIN) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
+             [name, email, hashedPassword, age, height, speed, dribbling, passing, shooting, picture, adminStatus], err => {
         if (err) {
           return res.status(500).send('Error registering user.')
         }
