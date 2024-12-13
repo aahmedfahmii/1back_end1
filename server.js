@@ -1,5 +1,5 @@
 const express = require ('express')
-const cors = require ('cors');
+const cors = require ('cors')
 const bcrypt = require ('bcrypt')
 const db_access = require ('./db.js')
 const db = db_access.db
@@ -332,6 +332,29 @@ const userId = req.userDetails.id;
     }
     res.status(200).json(bookings);
   })
+})
+
+//CANCELLING BOOKING
+
+server.delete('/bookings/cancel/:bookingId', verifyToken, (req, res) => {
+  const userId = req.userDetails.id
+  const bookingId = req.params.bookingId
+
+  db.get(`SELECT * FROM BOOKINGS WHERE ID = ? AND USER_ID = ?`, [bookingId, userId], (err, booking) => {
+    if (err) {
+      return res.status(500).send('Error accessing booking information.')
+    }
+    if (!booking) {
+      return res.status(404).send('Booking not found or does not belong to the user.')
+    }
+
+    db.run(`DELETE FROM BOOKINGS WHERE ID = ?`, [bookingId], (err) => {
+      if (err) {
+        return res.status(500).send('Error canceling the booking.')
+      }
+      res.status(200).send({ message: 'Booking canceled successfully', bookingId: bookingId })
+})
+ })
 })
 
 // ADDING NEW COACH
