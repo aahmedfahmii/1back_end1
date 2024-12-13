@@ -64,7 +64,7 @@ server.post('/user/login', (req, res) => {
               secure: true,
               maxAge: 3600000 
           });
-          return res.status(200).json({ id: userID, admin: isAdmin });
+          return res.status(200).json({ id: userID, admin: isAdmin ,token : token});
       }
   });
 });
