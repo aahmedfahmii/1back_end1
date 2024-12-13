@@ -455,9 +455,9 @@ server.listen(port, () => {
     db.run(db_access.createUserTable);
     db.run(db_access.createFieldTable);
     db.run(db_access.createBookingTable);
-    db.run(createTimingsTable)
-    db.run(createCoachesTable)
-    db.run(createPostTable)
-        db.run(createReviewTable)
-  });
-});
+    db.run(db_access.createTimingsTable)
+    db.run(db_access.createCoachesTable)
+    db.run(db_access.createPostTable)
+        db.run(db_access.createReviewTable)
+  })
+})
