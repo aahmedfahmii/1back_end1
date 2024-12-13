@@ -53,4 +53,4 @@ const createReviewTable = `CREATE TABLE IF NOT EXISTS REVIEWS (ID INTEGER PRIMAR
     CONTENT TEXT NOT NULL,
     FOREIGN KEY (USER_ID) REFERENCES USERS (ID))`;
 
-module.exports = {db,createUserTable,createFieldTable,createCoachesTable,createBookingTable,createPostTable,createReviewTable};
+module.exports = {db,createUserTable,createFieldTable,createTimingsTable,createCoachesTable,createBookingTable,createPostTable,createReviewTable};
