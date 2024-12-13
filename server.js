@@ -160,40 +160,40 @@ server.get('/user/profile', verifyToken, (req, res) => {
 
   // ADD NEW FIELD WITH TIMINGS
 
-  server.post('/fields/add', verifyToken, (req, res) => {
-    const isAdmin = req.userDetails.isAdmin
-  if (isAdmin !== 1) {
+   server.post('/fields/add', verifyToken, (req, res) => {
+     const isAdmin = req.userDetails.isAdmin
+   if (isAdmin !== 1) {
     return res.status(403).send("you are not an admin")
-  }
+   }
 
-  const name = req.body.name
-      const location = req.body.location
-     const price = req.body.price
+   const name = req.body.name
+       const location = req.body.location
+      const price = req.body.price
       const picture = req.body.picture || null
 
-  db.run(`INSERT INTO FIELDS (NAME, LOCATION, PRICE, PICTURE) VALUES (?, ?, ?, ?)`, 
-           [name, location, price, picture || null], function(err) {
-      if (err) {
+   db.run(`INSERT INTO FIELDS (NAME, LOCATION, PRICE, PICTURE) VALUES (?, ?, ?, ?)`, 
+            [name, location, price, picture || null], function(err) {
+       if (err) {
         return res.status(500).send('Error adding field.' + err.message)
       }
 
-      const fieldId = this.lastID; 
+       const fieldId = this.lastID; 
       const timeSlots = ['02:00-4:00', '4:00-6:00', '6:00-8:00', '8:00-10:00', '10:00-12:00']
-     let completed = 0
+      let completed = 0
 
-      timeSlots.forEach(slot => {
+       timeSlots.forEach(slot => {
           db.run(`INSERT INTO TIMINGS (FIELD_ID, TIME_SLOT) VALUES (?, ?)`, [fieldId, slot], err => {
             completed++;
-              if (err) {
-                  console.error(`Failed to add timing ${slot} for field ID ${fieldId}: ${err.message}`)
+               if (err) {
+                 console.error(`Failed to add timing ${slot} for field ID ${fieldId}: ${err.message}`)
                 }
                 if (completed === timeSlots.length) {
-                    res.status(200).send(`Field and timings added successfully.`)
-                  }
+                     res.status(200).send(`Field and timings added successfully.`)
+                   }
           })
-          })
+           })
+      })
      })
-    })
     
 
 // DELETE EXISITING FIELD
