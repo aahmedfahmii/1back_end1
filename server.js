@@ -334,28 +334,16 @@ function insertBooking(userId, fieldId, bookingDate, timingId, coachId, totalPri
 }
 
 
-//FETCHING TIMINGS FOR CHOSE FIELD WHILE BOOKING
+//FETCHING TIMINGS 
 
-server.get('/timings/:fieldId', verifyToken, (req, res) => {
-  const fieldId = req.params.fieldId;  
-
-  if (!fieldId) {
-      return res.status(400).send("Field ID is required.")
-  }
-
-  const query = `SELECT * FROM TIMINGS WHERE FIELD_ID = ?`
-
-  db.all(query, [fieldId], (err, timings) => {
+server.get('/timings', verifyToken, (req, res) => {
+  db.all(`SELECT * FROM TIMINGS`, (err, timings) => {
       if (err) {
-          console.error('Error fetching timings: ', err)
-          return res.status(500).send("Error fetching timings for the field.")
+          return res.status(500).send('Error fetching timings.')
       }
-      if (timings.length === 0) {
-          return res.status(404).send("No timings found for the specified field.")
-      }
-      res.status(200).json(timings)
+      res.status(200).json(timings);
   })
-})
+});
 
 
 
@@ -365,7 +353,7 @@ server.get('/user/bookings', verifyToken, (req, res) => {
   const userId = req.userDetails.id
 
   const query = `SELECT BOOKINGS.ID as BookingID, FIELDS.NAME as FieldName, COACHES.COACH_NAME as CoachName,
-   TIMINGS.TIME_SLOT as Timing, BOOKINGS.BOOKING_DATE as BookingDate
+   TIMINGS.TIME_SLOT as Timing, BOOKINGS.BOOKING_DATE as BookingDate , BOOKINGS.PRICE as TOTAL_PRICE
      FROM BOOKINGS
       LEFT JOIN FIELDS ON BOOKINGS.FIELD_ID = FIELDS.ID
     LEFT JOIN COACHES ON BOOKINGS.COACH_ID = COACHES.ID
