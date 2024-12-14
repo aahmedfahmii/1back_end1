@@ -492,6 +492,33 @@ server.get('/reviews', verifyToken, (req, res) => {
 })
 })
 
+// DELETE EXISTING TIMING SLOT
+
+server.delete('/timings/:timingId', verifyToken, (req, res) => {
+  const isAdmin = req.userDetails.isAdmin
+  if (isAdmin !== 1) {
+    return res.status(403).send("you are not an admin")
+    }
+
+  const timingId = req.params.timingId;
+
+  db.get(`SELECT * FROM BOOKINGS WHERE TIMING_ID = ?`, [timingId], (err, booking) => {
+      if (err) {
+          return res.status(500).send('Error while checking bookings for the timing slot');
+      }
+      if (booking) {
+          return res.status(400).send('Cannot delete timing slot as bookings exist');
+      }
+
+      db.run(`DELETE FROM TIMINGS WHERE ID = ?`, [timingId], (err) => {
+          if (err) {
+              return res.status(500).send('Error deleting timing slot');
+          }
+          res.status(200).send(`Timing slot deleted successfully`);
+      });
+  });
+});
+
 
 server.listen(port, () => {
   console.log(`Server started on port ${port}`);
