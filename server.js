@@ -349,22 +349,31 @@ server.get('/timings', verifyToken, (req, res) => {
 // HISTORY OF BOOKING FOR SPEICIFC USER
 
 server.get('/user/bookings', verifyToken, (req, res) => {
-const userId = req.userDetails.id;
-  const query = `SELECT * FROM BOOKINGS WHERE USER_ID = ?`
+  const userId = req.userDetails.id
 
-  db.all(query, [userId], (err, bookings) => {
-    if (err) 
-    {
-      console.error(err);
-      return res.status(500).send("Error fetching booking history")
-    }
-    if (!bookings[0]) 
-    { 
-      return res.status(404).send("No bookings made by this user.")
-    }
-    res.status(200).json(bookings);
+  const query = `SELECT BOOKINGS.ID as BookingID, FIELDS.NAME as FieldName, COACHES.COACH_NAME as CoachName,
+   TIMINGS.TIME_SLOT as Timing, BOOKINGS.BOOKING_DATE as BookingDate
+     FROM BOOKINGS
+      LEFT JOIN FIELDS ON BOOKINGS.FIELD_ID = FIELDS.ID
+    LEFT JOIN COACHES ON BOOKINGS.COACH_ID = COACHES.ID
+      LEFT JOIN TIMINGS ON BOOKINGS.TIMING_ID = TIMINGS.ID
+  WHERE BOOKINGS.USER_ID = ?
+  `
+
+ db.all(query, [userId], (err, bookings) => {
+     if (err) {
+         console.error('Error fetching bookings: ', err)
+      res.status(500).send("Error fetching booking history")
+      return
+      }
+      if (bookings.length === 0) {
+          res.status(404).send("No bookings found.")
+          return;
+      }
+      res.status(200).json(bookings)
   })
 })
+
 
 //CANCELLING BOOKING
 
