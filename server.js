@@ -20,54 +20,63 @@ server.use(cookieParser());
 const generateToken = (id, isAdmin) => {
   return jwt.sign({ id, isAdmin }, secret_key, { expiresIn: '1h' });
 }
+
 const verifyToken = (req, res, next) => {
-  const token = req.cookies.authToken;
+  const token = req.cookies.authToken; 
   if (!token) {
-      return res.status(401).send('Unauthorized');
+    return res.status(401).send('Unauthorized');
   }
+
   jwt.verify(token, secret_key, (err, userDetails) => {
-      if (err) {
-          return res.status(403).send('Invalid or expired token');
-      }
-      req.userDetails = userDetails;
-      next();
+    if (err) {
+      return res.status(403).send('Invalid or expired token');
+    }
+
+    req.userDetails = userDetails; 
+    next();
   });
 };
 
-// LOGIN
+//LOGIN 
 
 server.post('/user/login', (req, res) => {
-    const email = req.body.email;
-    const password = req.body.password;
-    db.get(`SELECT * FROM USERS WHERE EMAIL = ?`, [email], (err, user) => {
-      if (err) {
-        return res.status(500).send('Error on user lookup.');
-      }
-      if (!user) {
-        return res.status(401).send('User not found.');
-      }
-      bcrypt.compare(password, user.PASSWORD, (err, isMatch) => {
-        if (err) {
-          return res.status(500).send('Error comparing password.');
-        }
-        if (!isMatch) {
-          return res.status(401).send('Invalid credentials');
-        }
-        else {
-          let userID = user.ID;
-          let isAdmin = user.ISADMIN;
-          const token = generateToken(userID, isAdmin);
+  const email = req.body.email;
+  const password = req.body.password;
 
-          res.cookie('authToken', token, {
-              httpOnly: true,
-              sameSite: 'none',
-              secure: true,
-              maxAge: 3600000 
-          });
-          return res.status(200).json({ id: userID, admin: isAdmin ,token : token});
+  db.get(`SELECT * FROM USERS WHERE EMAIL = ?`, [email], (err, user) => {
+    if (err) {
+      return res.status(500).send('Error on user lookup.');
+    }
+    if (!user) {
+      return res.status(401).send('User not found.');
+    }
+
+    bcrypt.compare(password, user.PASSWORD, (err, isMatch) => {
+      if (err) {
+        return res.status(500).send('Error comparing password.');
       }
+      if (!isMatch) {
+        return res.status(401).send('Invalid credentials');
+      }
+
+      const userID = user.ID;
+      const isAdmin = user.ISADMIN;
+      const token = generateToken(userID, isAdmin); 
+
+      res.cookie('authToken', token, {
+        httpOnly: true, 
+        sameSite: 'strict', 
+        secure: false, 
+        maxAge: 3600000, 
+      });
+
+      return res.status(200).json({
+        id: userID,
+        admin: isAdmin,
+        token: token
+      });
+    });
   });
-});
 });
 
 // REGISTER
