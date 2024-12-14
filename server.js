@@ -440,6 +440,18 @@ if (isAdmin !== 1) {
 })
 })
 
+//FETCHING ALL COACHES
+
+server.get('/coaches', verifyToken, (req, res) => {
+  db.all(`SELECT * FROM COACHES`, (err, coaches) => {
+    if (err) {
+      return res.status(500).send('Error fetching coaches.');
+    }
+    res.status(200).json(coaches);
+  })
+})
+
+
 // ADD A REVIEW 
 
 server.post('/reviews/add', verifyToken, (req, res) => {
