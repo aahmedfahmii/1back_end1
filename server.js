@@ -334,16 +334,29 @@ function insertBooking(userId, fieldId, bookingDate, timingId, coachId, totalPri
 }
 
 
-//FETCHING ALL TIMMINGS TO DISPLAY WHILE BOOKING
+//FETCHING TIMINGS FOR CHOSE FIELD WHILE BOOKING
 
-server.get('/timings', verifyToken, (req, res) => {
-  db.all(`SELECT * FROM TIMINGS`, (err, timings) => {
+server.get('/timings/:fieldId', verifyToken, (req, res) => {
+  const fieldId = req.params.fieldId;  
+
+  if (!fieldId) {
+      return res.status(400).send("Field ID is required.")
+  }
+
+  const query = `SELECT * FROM TIMINGS WHERE FIELD_ID = ?`
+
+  db.all(query, [fieldId], (err, timings) => {
       if (err) {
-          return res.status(500).send('Error fetching timings.')
+          console.error('Error fetching timings: ', err)
+          return res.status(500).send("Error fetching timings for the field.")
       }
-      res.status(200).json(timings);
+      if (timings.length === 0) {
+          return res.status(404).send("No timings found for the specified field.")
+      }
+      res.status(200).json(timings)
   })
-});
+})
+
 
 
 // HISTORY OF BOOKING FOR SPEICIFC USER
